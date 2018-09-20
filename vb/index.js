@@ -158,11 +158,13 @@ const install = function (Vue, opts = {}) {
             Vue.use(item, opts.prefix);
         }
     }
+    Vue.prototype.$VUEBEAUTY = { size: opts.size || '' };
 };
 
 // 注册全局方法
 notification.install = function (Vue) {
     Vue.$notification = Vue.prototype.$notification = notification;
+    Vue.$modal = Vue.prototype.$modal = modal;
 };
 
 // auto install

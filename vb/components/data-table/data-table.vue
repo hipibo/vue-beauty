@@ -1,6 +1,6 @@
 <template lang="html">
 
-    <div :class="tableCls" :style="{height:tableBodyHeight+'px'}">
+    <div :class="tableCls" :style="{height:tableBodyHeight+'px',maxHeight:tableBodyMaxHeight}">
 
         <div :class="prefix + '-header'" :style="{left:-tableBodyScrollLeft+'px',width:tableBodyWidth}">
             <table ref="theader" :style="{width:tableBodyWidth}">
@@ -277,7 +277,7 @@
             </div>
             <div :class="prefix + '-description pull-left'">
                 <slot name="footerinfo" :total="total" pageNumber="pageNumber">
-                    共有{{total}}条数据
+                    {{ t('dataTable.total', { total }) }}
                 </slot>
             </div>
         </div>
@@ -285,14 +285,17 @@
 </template>
 <script>
 import debounce from 'lodash/debounce';
+import Locale from '../../mixins/locale';
 import vPagination from '../pagination';
 import vSpin from '../spin';
 import vIcon from '../icon';
 import vCheckbox from '../checkbox';
 import vRadio from '../radio';
+import { t } from '../../locale';
 
 export default {
     name: 'DataTable',
+    mixins: [Locale],
     props: {
         size: {
             type: String,
@@ -376,6 +379,11 @@ export default {
             type: Number,
             default: null,
         },
+        // 最大高度
+        maxHeight: { // fixed by luozhong 支持表格最大高度
+            type: Number,
+            default: null,
+        },
         // 左侧固定列
         fixedLeft: {
             type: Number,
@@ -399,7 +407,7 @@ export default {
         },
         emptyText: {
             type: String,
-            default: '老板,没有找到你想要的信息......',
+            default: () => t('dataTable.notFoundContent'),
         },
     },
     /*
@@ -421,12 +429,13 @@ export default {
             // 加载状态
             loading: false,
             sortParams: {},
-            //                排序模式:single和multi,单参数和多参数
+            // 排序模式:single和multi,单参数和多参数
             sortModel: 'single',
             rowSelectionStates: [],
             tableBodyScrollLeft: 0,
             tableBodyWidth: '100%',
             tableBodyHeight: null,
+            tableBodyMaxHeight: null, // fixed by luozhong 支持表格最大高度
             pageNumber: this.pageNum,
             pageSizeT: this.pageSize,
             paramsName: {},
@@ -541,7 +550,7 @@ export default {
 
             this.loadData();
         },
-        //            单参数排序模式
+        // 单参数排序模式
         setCurrentSort(sortColumn, order) {
             if (!order) {
                 switch (sortColumn.sort) {
@@ -784,6 +793,9 @@ export default {
                 // 未设置height属性时，处理bottomGap属性（height属性优先）
                 this.fixGapHeight();
             }
+            if (this.maxHeight) { // fixed by luozhong 支持表格最大高度
+                this.tableBodyMaxHeight = `${this.maxHeight}px`;
+            }
             this.getBodyWidth();
             this.fixHeaderWidth();
         },
@@ -794,6 +806,9 @@ export default {
         },
         // 修正各个表头的宽度
         fixHeaderWidth() {
+            if (this.current.length === 0) {
+                return;
+            }
             const theader = this.$refs.theader;
             const lettheaderThs = theader && theader.querySelectorAll('thead>tr>th');
             const tbody = this.$refs.tbody;
@@ -806,7 +821,8 @@ export default {
             let fixedRightCols;
 
             for (const [index, el] of lettheaderThs.entries()) {
-                if (index !== lettheaderThs.length - 1) {
+                // if (index !== lettheaderThs.length - 1) {
+                if (index !== lettheaderThs.length) {
                     el.style.width = `${tbodyThs[index].offsetWidth}px`;
                 }
             }
@@ -832,7 +848,7 @@ export default {
 
             if (condition) {
                 for (const [index, el] of lettheaderThs.entries()) {
-                    if (index !== lettheaderThs.length - 1) {
+                    if (index !== lettheaderThs.length) {
                         el.style.width = `${tbodyThs[index].offsetWidth}px`;
                     }
                 }
@@ -889,7 +905,8 @@ export default {
             for (let i = 0; i < children.length; i++) {
                 const obj = children[i];
                 obj.children = this.transTreeData(obj[TreeTableOpt.idKey]);
-                obj.level = this.getLevel(obj.id);
+                // obj.level = this.getLevel(obj.id); // 默认是id，但用户可以自定义idkey
+                obj.level = this.getLevel(obj[TreeTableOpt.idKey]); // fixed by luozhong 兼容用户自定义idkey情况
                 obj.vshow = !(obj.level > 1);
                 obj.vopen = !(obj.level > 0);
                 obj.paddingLeft = `${(obj.level - 1) * 12 * this.treeTableOption.indent}px`;
@@ -904,13 +921,13 @@ export default {
                 const obj = trData[i];
                 const ch = obj.children;
 
-                //                    如果是异步模式，直接使用isparent字段判断是否为父节点；否则使用children长度判断
+                // 如果是异步模式，直接使用isparent字段判断是否为父节点；否则使用children长度判断
                 if (!this.treeTableOption.isAsync) {
                     obj.isparent = !!ch.length;
                 }
-                //                    先插入父节点
+                // 先插入父节点
                 this.newData.push(obj);
-                //                     递归插入子节点
+                // 递归插入子节点
                 ch.length && this.sortTrData(ch);
             }
         },
@@ -922,7 +939,7 @@ export default {
             }
             return a[name] < b[name] ? 1 : -1;
         },
-        //            查找子节点
+        // 查找子节点
         findChildren(pid) {
             const results = [];
             const origindata = this.originData;
@@ -933,7 +950,7 @@ export default {
             }
             return results;
         },
-        //            获取节点层级
+        // 获取节点层级
         getLevel(id) {
             const origindata = this.originData;
             const TreeTableOpt = this.treeTableOption;
@@ -981,7 +998,7 @@ export default {
             const children = item.children || [];
             for (let i = 0; i < children.length; i++) {
                 children[i].vshow = vshow;
-                //                    关闭节点时，所有子孙节点都要关闭
+                // 关闭节点时，所有子孙节点都要关闭
                 this.collapse(children[i]);
             }
             this.calculateSize();
@@ -1045,7 +1062,7 @@ export default {
         tableCls() {
             return [
                 this.prefix,
-                `${this.prefix}-${this.size}`,
+                `${this.prefix}-${this.size || this.$VUEBEAUTY.size}`,
                 { [`${this.prefix}-bordered`]: this.bordered },
                 { [`${this.prefix}-stripe`]: this.stripe },
             ];

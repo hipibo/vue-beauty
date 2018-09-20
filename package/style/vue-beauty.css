@@ -6545,6 +6545,9 @@ textarea.ant-pagination-options-quick-jumper input {
 .ant-select-dropdown-menu-item:hover {
   background-color: #ecf6fd;
 }
+.ant-select-dropdown-menu-item-likehover {
+  background-color: #ecf6fd;
+}
 .ant-select-dropdown-menu-item-disabled {
   color: rgba(0, 0, 0, 0.25);
   cursor: not-allowed;
@@ -6599,6 +6602,9 @@ textarea.ant-pagination-options-quick-jumper input {
   font-size: 12px;
 }
 .ant-select-dropdown.ant-select-dropdown--multiple .ant-select-dropdown-menu-item:hover:after {
+  color: #ddd;
+}
+.ant-select-dropdown.ant-select-dropdown--multiple .ant-select-dropdown-menu-item-likehover:after {
   color: #ddd;
 }
 .ant-select-dropdown.ant-select-dropdown--multiple .ant-select-dropdown-menu-item-disabled:after {
@@ -15196,6 +15202,7 @@ form .ant-input-group-addon .ant-cascader-picker:only-child {
   position: relative;
   overflow: auto;
   border-radius: 4px;
+  z-index: 0;
 }
 .ant-table-body {
   transition: opacity 0.3s ease;
@@ -20526,7 +20533,7 @@ samp {
   vertical-align: middle;
   position: relative;
   width: 180px;
-  height: 200px;
+  height: 250px;
   padding-top: 33px;
 }
 .ant-transfer-list-with-footer {
@@ -20638,9 +20645,10 @@ span.ant-transfer-list-search-action {
 }
 .ant-transfer-operation .ant-btn {
   display: block;
-}
-.ant-transfer-operation .ant-btn:first-child {
   margin-bottom: 4px;
+}
+.ant-transfer-operation .ant-btn:last-child {
+  margin-bottom: 0;
 }
 .ant-transfer-operation .ant-btn .anticon {
   display: inline-block;
